@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards - Méthodologie de la Recherche Médicale</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-main: #2c3e50;
+            --text-muted: #7f8c8d;
+            --accent-primary: #3498db;
+            --accent-secondary: #2ecc71;
+            --accent-danger: #e74c3c;
+            --shadow: 0 4px 15px rgba(0,0,0,0.05);
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            max-width: 800px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #1a2a3a;
+            margin-bottom: 10px;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .instructions {
+            background-color: #e8f4fd;
+            color: #2980b9;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            margin-top: 15px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        /* Flashcard Wrapper */
+        .flashcard-wrapper {
+            perspective: 1000px;
+            height: 280px;
+            cursor: pointer;
+        }
+
+        /* Flashcard Inner */
+        .flashcard {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            box-shadow: var(--shadow);
+            border-radius: var(--border-radius);
+        }
+
+        /* Flip class applied via JavaScript */
+        .flashcard-wrapper.flipped .flashcard {
+            transform: rotateY(180deg);
+        }
+
+        /* Front and Back Sides */
+        .front, .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--card-bg);
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Front Side Specifics */
+        .front {
+            border-top: 5px solid var(--accent-primary);
+        }
+
+        .card-num {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            background-color: #f0f4f8;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .front h3 {
+            font-size: 1.2rem;
+            line-height: 1.5;
+            margin: 0;
+            color: #1a2a3a;
+        }
+
+        .hint {
+            position: absolute;
+            bottom: 15px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Back Side Specifics */
+        .back {
+            transform: rotateY(180deg);
+            border-top: 5px solid var(--accent-secondary);
+            overflow-y: auto;
+            justify-content: flex-start;
+            text-align: left;
+            align-items: flex-start;
+        }
+
+        .back h4 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: var(--accent-secondary);
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e2e8f0;
+            width: 100%;
+            padding-bottom: 5px;
+        }
+
+        .back-content {
+            font-size: 0.92rem;
+            line-height: 1.5;
+            width: 100%;
+        }
+
+        .back-content ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .back-content li {
+            margin-bottom: 8px;
+        }
+
+        .back-content strong {
+            color: #1a2a3a;
+        }
+
+        /* Table inside card styling */
+        .card-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        .card-table th, .card-table td {
+            border: 1px solid #e2e8f0;
+            padding: 5px 8px;
+            text-align: left;
+        }
+
+        .card-table th {
+            background-color: #f8fafc;
+            color: var(--text-main);
+        }
+
+        /* Custom scrollbar for cards with lots of content */
+        .back::-webkit-scrollbar {
+            width: 6px;
+        }
+        .back::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .back::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .back::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Flashcards de Révision</h1>
+        <p class="subtitle">Méthodologie de la Recherche Médicale & Épidémiologie</p>
+        <div class="instructions">💡 Cliquez sur une carte pour la retourner et voir la réponse !</div>
+    </header>
+
+    <div class="grid-container">
+
+        <!-- Card 1 -->
+        <div class="flashcard-wrapper" onclick="toggleCard(this)">
+            <div class="flashcard">
+                <div class="front">
+                    <span class="card-num">Q1</span>
+                    <h3>Quels sont les trois piliers de la recherche médicale et qu'est-ce que la recherche translationnelle ?</h3>
+                    <span class="hint">Cliquez pour voir</span>
+                </div>
+                <div class="back">
+                    <h4>Réponse</h4>
+                    <div class="back-content">
+                        <ul>
+                            <li><strong>Recherche fondamentale :</strong> Étude des mécanismes biologiques de base en laboratoire (biologie cellulaire, génétique, biochimie). <em>Ex : découverte d'un récepteur.</em></li>
+                            <li><strong>Recherche clinique :</strong> Application directe sur l'être humain. Teste l'efficacité et la sécurité des traitements (essais cliniques, études observationnelles).</li>
+                            <li><strong>Recherche translationnelle :</strong> Le pont entre le laboratoire et le lit du patient (<em>bench to bedside</em>). Accélère le transfert des découvertes fondamentales vers le clinique et vice-versa.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="flashcard-wrapper" onclick="toggleCard(this)">
+            <div class="flashcard">
+                <div class="front">
+                    <span class="card-num">Q2</span>
+                    <h3>Quels sont les critères FINER utilisés pour évaluer la pertinence d'une question de recherche ?</h3>
+                    <span class="hint">Cliquez pour voir</span>
+                </div>
+                <div class="back">
+                    <h4>Réponse</h4>
+                    <div class="back-content">
+                        <ul>
+                            <li><strong>F — Faisable :</strong> Étudiable avec les ressources disponibles (sujets, expertise, budget, délai).</li>
+                            <li><strong>I — Intéressant :</strong> Suscite l'intérêt de la communauté scientifique et répond à un besoin réel.</li>
+                            <li><strong>N — Novateur :</strong> Apporte de nouvelles connaissances (confirme, réfute ou étend l'existant).</li>
+                            <li><strong>E — Éthique :</strong> Respecte les principes fondamentaux (comité d'éthique, consentement éclairé).</li>
+                            <li><strong>R — Pertinent (Relevant) :</strong> Impact sur la pratique clinique, politique de santé ou science.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="flashcard-wrapper" onclick="toggleCard(this)">
+            <div class="flashcard">
+                <div class="front">
+                    <span class="card-num">Q3</span>
+                    <h3>Structurez la formulation d'une question clinique à l'aide du format PICO et expliquez ses composantes.</h3>
+                    <span class="hint">Cliquez pour voir</span>
+                </div>
+                <div class="back">
+                    <h4>Réponse</h4>
+                    <div class="back-content">
+                        <ul>
+                            <li><strong>P (Patient/Population) :</strong> Définition de la population cible (démographie, pathologie, critères d'inclusion/exclusion).</li>
+                            <li><strong>I (Intervention) :</strong> Ce que l'on souhaite évaluer (médicament, test, chirurgie, exposition).</li>
+                            <li><strong>C (Comparaison) :</strong> La référence par rapport à l'intervention (placebo, traitement de référence, absence d'intervention).</li>
+                            <li><strong>O (Outcome / Critère de jugement) :</strong> Variable mesurée pour évaluer l'effet (mortalité, qualité de vie, bio). <em>Un seul critère principal à priori.</em></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="flashcard-wrapper" onclick="toggleCard(this)">
+            <div class="flashcard">
+                <div class="front">
+                    <span class="card-num">Q4</span>
+                    <h3>Différenciez la littérature primaire de la littérature secondaire en recherche médicale (+ 2 exemples).</h3>
+                    <span class="hint">Cliquez pour voir</span>
+                </div>
+                <div class="back">
+                    <h4>Réponse</h4>
+                    <div class="back-content">
+                        <ul>
+                            <li><strong>Littérature primaire :</strong> Publications qui rapportent pour la première fois les résultats d'une recherche originale. Soumise à un *peer review*, structure IMRAD.<br><em>Exemples : Articles originaux, rapports de cas, lettres scientifiques.</em></li>
+                            <li><strong>Littérature secondaire :</strong> Synthétise, analyse et interprète les données de la littérature primaire pour donner une vision globale.<br><em>Exemples : Revues systématiques, méta-analyses, recommandations cliniques.</em></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="flashcard-wrapper" onclick="toggleCard(this)">
+            <div class="flashcard">
+                <div class="front">
+                    <span class="card-num">Q5</span>
+                    <h3>Qu'est-ce que la « littérature grise » en recherche bibliographique ? Donnez 3 exemples.</h3>
+                    <span class="hint">Cliquez pour voir</span>
+                </div>
+                <div class="back">
+                    <h4>Réponse</h4>
+                    <div class="back-content">
+                        <p><strong>Définition :</strong> Ensemble des documents produits en dehors des circuits commerciaux et éditoriaux de l'édition scientifique traditionnelle.</p>
+                        <p><strong>Exemples (au choix) :</strong></p>
+                        <ul>
+                            <li>Thèses et mémoires</li>
+                            <li>Rapports institutionnels</li>
+                            <li>Actes de congrès / Conférences</li>
+                            <li>Prépublications (Preprints)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="flashcard-wrapper" onclick="toggleCard(this)">
+            <div class="flashcard">
+                <div class="front">
+                    <span class="card-num">Q6</span>
+                    <h3>Expliquez le rôle des opérateurs booléens AND, OR et NOT dans une équation de recherche PubMed.</h3>
+                    <span class="hint">Cliquez pour voir</span>
+                </div>
+                <div class="back">
+                    <h4>Réponse</h4>
+                    <div class="back-content">
+                        <ul>
+                            <li><strong>AND (et) :</strong> Restreint la recherche. Tous les termes connectés doivent obligatoirement être présents dans l'article.</li>
+                            <li><strong>OR (ou) :</strong> Élargit la recherche. Au moins un des termes connectés doit être présent (idéal pour les synonymes).</li>
+                            <li><strong>NOT (sauf) :</strong> Exclut des résultats. Élimine tous les articles contenant le second terme.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 7 -->
+        <div class="flashcard-wrapper" onclick="toggleCard(this)">
+            <div class="flashcard">
+                <div class="front">
+                    <span class="card-num">Q7</span>
+                    <h3>Définissez le plagiat et l'auto-plagiat, puis citez trois bonnes pratiques pour les éviter.</h3>
+                    <span class="hint">Cliquez pour voir</span>
+                </div>
+                <div class="back">
+                    <h4>Réponse</h4>
+                    <div class="back-content">
+                        <ul>
+                            <li><strong>Plagiat :</strong> Présenter les idées, mots ou travaux d'autrui comme les siens, sans citer correctement la source (plagiat direct ou paraphrase non citée).</li>
+                            <li><strong>Auto-plagiat :</strong> Réutiliser ses propres travaux déjà publiés sans le mentionner explicitement.</li>
+                            <li><strong>3 Bonnes pratiques :</strong> 
+                                <ol>
+                                    <li>Citer dès la prise de notes.</li>
+                                    <li>Reformuler avec ses propres mots.</li>
+                                    <li>Utiliser les guillemets pour les citations textuelles.</li>
+                                    <li>Vérifier avec un logiciel anti-plagiat.</li>
+                                </ol>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 8 -->
+        <div class="flashcard-wrapper" onclick="toggleCard(this)">
+            <div class="flashcard">
+                <div class="front">
+                    <span class="card-num">Q8</span>
+                    <h3>Quelle est la différence fondamentale entre une étude observationnelle et une étude interventionnelle ?</h3>
+                    <span class="hint">Cliquez pour voir</span>
+                </div>
+                <div class="back">
+                    <h4>Réponse</h4>
+                    <div class="back-content">
+                        <ul>
+                            <li><strong>Étude Observationnelle :</strong> Le chercheur n'attribue aucun traitement, il observe la réalité sans la modifier.
+                                <ul>
+                                    <li><em>Descriptives :</em> Génèrent des hypothèses (cas cliniques).</li>
+                                    <li><em>Analytiques :</em> Cherchent des associations (cas-témoins, cohorte).</li>
+                                </ul>
+                            </li>
+                            <li><strong>Étude Interventionnelle :</strong> Le chercheur modifie activement la réalité en attribuant un traitement/exposition (ex: Essai Contrôlé Randomisé - ECR). Donne le plus haut niveau de preuve pour la causalité.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 9 -->
+        <div class="flashcard-wrapper" onclick="toggleCard(this)">
+            <div class="flashcard">
+                <div class="front">
+                    <span class="card-num">Q9</span>
+                    <h3>Comparez l'étude Cas-Témoins et l'étude de Cohorte (critères de l'image de cours).</h3>
+                    <span class="hint">Cliquez pour voir</span>
+                </div>
+                <div class="back">
+                    <h4>Réponse</h4>
+                    <div class="back-content">
+                        <table class="card-table">
+                            <thead>
+                                <tr>
+                                    <th>Critère</th>
+                                    <th>Cas-Témoins</th>
+                                    <th>Cohorte</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Départ</strong></td>
+                                    <td>Maladie (Outcome)</td>
+                                    <td>Exposition</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Temps</strong></td>
+                                    <td>Rétrospective</td>
+                                    <td>Prospective</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Maladies rares</strong></td>
+                                    <td>✅ Très adapté</td>
+                                    <td>❌ Inadapté (trop long)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Coût / Durée</strong></td>
+                                    <td>Faible / Court</td>
+                                    <td>Élevé / Long</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Association</strong></td>
+                                    <td>Odds Ratio (OR)</td>
+                                    <td>Risque Relatif (RR)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Mémorisation</strong></td>
+                                    <td>Élevé (recall bias)</td>
+                                    <td>Faible (prospective)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Preuve</strong></td>
+                                    <td>Modéré</td>
+                                    <td>Élevé (obs.)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 10 -->
+        <div class="flashcard-wrapper" onclick="toggleCard(this)">
+            <div class="flashcard">
+                <div class="front">
+                    <span class="card-num">Q10</span>
+                    <h3>Qu'est-ce qu'un biais de confusion ? Illustrez-le (café/cancer) et comment le prévenir ?</h3>
+                    <span class="hint">Cliquez pour voir</span>
+                </div>
+                <div class="back">
+                    <h4>Réponse</h4>
+                    <div class="back-content">
+                        <p><strong>Biais de confusion :</strong> Variable tierce associée à la fois à l'exposition et à la maladie, créant une association artificielle.</p>
+                        <p><strong>Exemple :</strong> Association apparente entre <em>Café</em> et <em>Cancer du poumon</em> (OR significatif). L'explication cachée est le <strong>Tabac</strong> (le facteur de confusion) : les grands buveurs de café fument davantage. Si on ajuste sur le tabagisme, l'association café-cancer disparaît.</p>
+                        <p><strong>Prévention :</strong> Restriction, appariement, stratification, régression multivariée. La <em>randomisation</em> (ECR) élimine les facteurs connus et inconnus.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function toggleCard(wrapper) {
+            wrapper.classList.toggle('flipped');
+        }
+    </script>
+
+</body>
+</html>
